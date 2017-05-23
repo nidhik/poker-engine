@@ -20,11 +20,9 @@ package org.dsaw.poker.engine.gui;
 import javax.swing.*;
 import java.awt.*;
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
 import org.dsaw.poker.engine.Card;
 import org.dsaw.poker.engine.Client;
 import org.dsaw.poker.engine.Player;
@@ -40,7 +38,7 @@ import org.dsaw.poker.engine.bots.BasicBot;
  * 
  * @author Oscar Stigter
  */
-public class Main extends JFrame implements Client {
+public class Main extends JFrame implements Client, Runnable{
     
     /** Serial version UID. */
     private static final long serialVersionUID = -5414633931666096443L;
@@ -66,20 +64,21 @@ public class Main extends JFrame implements Client {
     /** The player panels. */
     private final Map<String, PlayerPanel> playerPanels;
     
-    /** The human player. */
+    /** The player. */
     private final Player humanPlayer;
     
     /** The current dealer's name. */
     private String dealerName; 
 
     /** The current actor's name. */
-    private String actorName; 
+    private String actorName;
 
     /**
      * Constructor.
      */
-    public Main() {
+    public Main(String me, TableType tableType) {
         super("Texas Hold'em poker");
+        humanPlayer = new Player(me, STARTING_CASH, this);
 
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         getContentPane().setBackground(UIConstants.TABLE_COLOR);
@@ -87,26 +86,30 @@ public class Main extends JFrame implements Client {
 
         gc = new GridBagConstraints();
         
-        controlPanel = new ControlPanel(TABLE_TYPE);
+        controlPanel = new ControlPanel(tableType);
         
         boardPanel = new BoardPanel(controlPanel);        
         addComponent(boardPanel, 1, 1, 1, 1);
-        
-        /* The players at the table. */
-        Map<String, Player> players = new LinkedHashMap<>();
-        humanPlayer = new Player("Player", STARTING_CASH, this);
-        players.put("Player", humanPlayer);
-        players.put("Joe", new Player("Joe", STARTING_CASH, new BasicBot(0, 75)));
-        players.put("Mike", new Player("Mike", STARTING_CASH, new BasicBot(25, 50)));
-        players.put("Eddie", new Player("Eddie", STARTING_CASH, new BasicBot(50, 25)));
 
-        /* The table. */
-        Table table = new Table(TABLE_TYPE, BIG_BLIND);
-        for (Player player : players.values()) {
-            table.addPlayer(player);
-        }
 
         playerPanels = new HashMap<>();
+
+    }
+
+    public void showFrame() {
+        // Show the frame.
+        pack();
+        setResizable(false);
+        setLocationRelativeTo(null);
+        setVisible(true);
+    }
+
+    public Player getHumanPlayer() {
+        return humanPlayer;
+    }
+
+    public void setPlayers(Map<String, Player> players) {
+
         int i = 0;
         for (Player player : players.values()) {
             PlayerPanel panel = new PlayerPanel();
@@ -132,34 +135,71 @@ public class Main extends JFrame implements Client {
                     // Do nothing.
             }
         }
-        
-        // Show the frame.
-        pack();
-        setResizable(false);
-        setLocationRelativeTo(null);
-        setVisible(true);
-
-        // Start the game.
-        table.run();
     }
-    
     /**
      * The application's entry point.
-     * 
+     *
      * @param args
      *            The command line arguments.
      */
     public static void main(String[] args) {
-        int numberOfSimultaneousExecutions = 2;
+
+
+
+   /* The players at the table. */
+        Map<String, Player> players = new LinkedHashMap<>();
+
+        Main gui1 = new Main("Nidhi", TABLE_TYPE);
+        Main gui2 = new Main("Ada", TABLE_TYPE);
+        Main gui3 = new Main("Mo", TABLE_TYPE);
+        Main gui4 = new Main("Neha", TABLE_TYPE);
+
+        final List<Main> gs = Arrays.asList(gui1, gui2, gui3, gui4);
+
+       Player p1 = gui1.getHumanPlayer();
+       Player p2 = gui2.getHumanPlayer();
+       Player p3 = gui3.getHumanPlayer();
+       Player p4 = gui4.getHumanPlayer();
+
+       players.put(p1.getName(), p1);
+       players.put(p2.getName(), p2);
+       players.put(p3.getName(), p3);
+       players.put(p4.getName(), p4);
+
+        gui1.setPlayers(players);
+        gui2.setPlayers(players);
+        gui3.setPlayers(players);
+        gui4.setPlayers(players);
+
+
+          /* The table. */
+        final Table table = new Table(TABLE_TYPE, BIG_BLIND);
+        for (Player player : players.values()) {
+            table.addPlayer(player);
+        }
+
+        int numberOfSimultaneousExecutions = 5;
         java.util.concurrent.Executor executor = java.util.concurrent.Executors.newFixedThreadPool(numberOfSimultaneousExecutions);
-        for (int i = 0; i < numberOfSimultaneousExecutions; i++) {
+
+        for (int i = 0; i < numberOfSimultaneousExecutions - 1; i++) {
+
+            final Main g = gs.get(i);
             executor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    new Main();
+                    g.showFrame();
                 }
             });
         }
+
+
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                // Start the game.
+                table.run();
+            }
+        });
 
 
     }
@@ -288,4 +328,8 @@ public class Main extends JFrame implements Client {
         }
     }
 
+    @Override
+    public void run() {
+
+    }
 }
