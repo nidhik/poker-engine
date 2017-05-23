@@ -672,7 +672,7 @@ public class Table {
             if (winnerText.length() > 0) {
                 winnerText.append(", ");
             }
-            winnerText.append(String.format("%s wins $ %d", winner, potShare));
+            winnerText.append(String.format("%s wins $ %f", winner, potShare));
             notifyPlayersUpdated(true);
         }
         winnerText.append('.');
