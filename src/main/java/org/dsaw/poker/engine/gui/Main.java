@@ -150,7 +150,18 @@ public class Main extends JFrame implements Client {
      *            The command line arguments.
      */
     public static void main(String[] args) {
-        new Main();
+        int numberOfSimultaneousExecutions = 2;
+        java.util.concurrent.Executor executor = java.util.concurrent.Executors.newFixedThreadPool(numberOfSimultaneousExecutions);
+        for (int i = 0; i < numberOfSimultaneousExecutions; i++) {
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    new Main();
+                }
+            });
+        }
+
+
     }
 
     @Override
