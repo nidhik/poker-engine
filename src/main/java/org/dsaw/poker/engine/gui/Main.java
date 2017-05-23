@@ -178,28 +178,16 @@ public class Main extends JFrame implements Client, Runnable{
             table.addPlayer(player);
         }
 
-        int numberOfSimultaneousExecutions = 5;
-        java.util.concurrent.Executor executor = java.util.concurrent.Executors.newFixedThreadPool(numberOfSimultaneousExecutions);
 
-        for (int i = 0; i < numberOfSimultaneousExecutions - 1; i++) {
+        int numberOfSimultaneousExecutions = 4;
+
+        for (int i = 0; i < numberOfSimultaneousExecutions; i++) {
 
             final Main g = gs.get(i);
-            executor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    g.showFrame();
-                }
-            });
+            (new Thread(g)).start();
         }
 
-
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                // Start the game.
-                table.run();
-            }
-        });
+        table.run();
 
 
     }
@@ -330,6 +318,6 @@ public class Main extends JFrame implements Client, Runnable{
 
     @Override
     public void run() {
-
+        showFrame();
     }
 }
